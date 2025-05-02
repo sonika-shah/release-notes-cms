@@ -10,24 +10,19 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { slugify } from "../utils/slugify";
-import { CallBucket } from "../types/releaseNote";
-import {
-  createCallBucket,
-  updateCallBucket,
-  getCallBucket,
-} from "../services/api";
+import { File } from "../types/releaseNote";
+import { createFile } from "../services/api";
 
-const CallBucketForm = () => {
+const FileForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<CallBucket>({
+  const [formData, setFormData] = useState<File>({
     id: 0,
-    title: "",
+    name: "",
     slug: "",
+    directory: "",
     content: "",
-    version: "",
-    release_date: new Date().toISOString(),
     is_published: false,
     created_at: new Date().toISOString(),
     updated_at: null,
@@ -38,10 +33,10 @@ const CallBucketForm = () => {
       const fetchData = async () => {
         try {
           setIsLoading(true);
-          const data = await getCallBucket(parseInt(id));
-          setFormData(data);
+          //   const data = await getFile(parseInt(id));
+          //   setFormData(data);
         } catch (error) {
-          console.error("Error fetching call bucket:", error);
+          console.error("Error fetching file:", error);
         } finally {
           setIsLoading(false);
         }
@@ -59,8 +54,8 @@ const CallBucketForm = () => {
         [name]: type === "checkbox" ? checked : value,
       };
 
-      // Automatically generate slug when title changes
-      if (name === "title") {
+      // Automatically generate slug when name changes
+      if (name === "name") {
         newData.slug = slugify(value);
       }
 
@@ -72,13 +67,13 @@ const CallBucketForm = () => {
     e.preventDefault();
     try {
       if (id) {
-        await updateCallBucket(parseInt(id), formData);
+        // await updateFile(parseInt(id), formData);
       } else {
-        await createCallBucket(formData);
+        await createFile(formData);
       }
       navigate("/");
     } catch (error) {
-      console.error("Error saving call bucket:", error);
+      console.error("Error saving file:", error);
     }
   };
 
@@ -98,13 +93,13 @@ const CallBucketForm = () => {
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        {id ? "Edit Call Bucket" : "New Call Bucket"}
+        {id ? "Edit File" : "New File"}
       </Typography>
       <TextField
         fullWidth
-        label="Title"
-        name="title"
-        value={formData.title}
+        label="Name"
+        name="name"
+        value={formData.name}
         onChange={handleChange}
         margin="normal"
         required
@@ -121,6 +116,16 @@ const CallBucketForm = () => {
       />
       <TextField
         fullWidth
+        label="Directory"
+        name="directory"
+        value={formData.directory}
+        onChange={handleChange}
+        margin="normal"
+        required
+        placeholder="e.g., /docs/release-notes"
+      />
+      <TextField
+        fullWidth
         label="Content"
         name="content"
         value={formData.content}
@@ -129,28 +134,6 @@ const CallBucketForm = () => {
         multiline
         rows={4}
         required
-      />
-      <TextField
-        fullWidth
-        label="Version"
-        name="version"
-        value={formData.version}
-        onChange={handleChange}
-        margin="normal"
-        required
-      />
-      <TextField
-        fullWidth
-        label="Release Date"
-        name="release_date"
-        type="datetime-local"
-        value={formData.release_date}
-        onChange={handleChange}
-        margin="normal"
-        required
-        InputLabelProps={{
-          shrink: true,
-        }}
       />
       <FormControlLabel
         control={
@@ -179,4 +162,4 @@ const CallBucketForm = () => {
   );
 };
 
-export default CallBucketForm;
+export default FileForm;

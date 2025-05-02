@@ -12,54 +12,24 @@ import {
   Typography,
   CircularProgress,
   Box,
+  Button,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { format } from "date-fns";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import PreviewIcon from "@mui/icons-material/Preview";
-import { CallBucket } from "../types/releaseNote";
+import { Bucket } from "../types/releaseNote";
 import { getCallBuckets, deleteCallBucket } from "../services/api";
-import PreviewModal from "../components/PreviewModal";
+import CreateCallBucketModal from "../components/CreateCallBucketModal";
+import { PlusOneOutlined } from "@mui/icons-material";
 
 // Dummy data for testing
-const dummyCallBuckets: CallBucket[] = [
+const dummyBuckets: Bucket[] = [
   {
     id: 1,
     title: "Version 1.0.0 Release",
     slug: "version-1-0-0-release",
-    content: `# 1.7.0 Release 🎉
-
-**Apr 15th, 2025**
-
-You can find the GitHub release [here](https://github.com/open-metadata/OpenMetadata/releases/tag/1.7.0-release).
-
-The latest Release 1.7 of OpenMetadata and Collate delivers new features to accelerate the onboarding of both data services and users, taking discovery, automations, and customizations one step further.
-
-# What's Changed
-
-## Breaking Changes
-
-### Removing support for Python 3.8
-
-Python 3.8 was [officially EOL on 2024-10-07](https://devguide.python.org/versions/). Some of our dependencies have already
-started removing support for higher versions, and are following suit to ensure we are using the latest and most stable
-versions of our dependencies.
-
-This means that for Release 1.7, the supported Python versions for the Ingestion Framework are 3.9, 3.10 and 3.11.
-
-We were already shipping our Docker images with Python 3.10, so this change should not affect you if you are using our Docker images.
-However, if you installed the \`openmetadata-ingestion\` package directly, please make sure to update your Python version to 3.9 or higher.
-
-# What's New
-
-### Putting your Metadata Ingestion on AutoPilot
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/lo4SrBAmTZM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-OpenMetadata provides workflows out of the box to extract different types of metadata from your data services such as schemas, lineage, usage and profiling. To accelerate the onboarding of new services, we have created the new AutoPilot Application, which will automatically deploy and trigger all these Metadata Agents when a new service is created!`,
-    version: "1.0.0",
-    release_date: "2024-05-01T00:00:00Z",
-    is_published: true,
     created_at: "2024-04-30T00:00:00Z",
     updated_at: null,
   },
@@ -67,10 +37,6 @@ OpenMetadata provides workflows out of the box to extract different types of met
     id: 2,
     title: "Version 1.1.0 Release",
     slug: "version-1-1-0-release",
-    content: "Added new features and bug fixes",
-    version: "1.1.0",
-    release_date: "2024-05-02T00:00:00Z",
-    is_published: true,
     created_at: "2024-05-01T00:00:00Z",
     updated_at: null,
   },
@@ -78,54 +44,52 @@ OpenMetadata provides workflows out of the box to extract different types of met
     id: 3,
     title: "Version 1.2.0 Release",
     slug: "version-1-2-0-release",
-    content: "Performance improvements and UI enhancements",
-    version: "1.2.0",
-    release_date: "2024-05-03T00:00:00Z",
-    is_published: false,
     created_at: "2024-05-02T00:00:00Z",
     updated_at: null,
   },
 ];
 
-const CallBucketsList = () => {
-  const [callBuckets, setCallBuckets] = useState<CallBucket[]>([]);
+const BucketsList = () => {
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [previewBucket, setPreviewBucket] = useState<CallBucket | null>(null);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      // Try to fetch from API first
+      try {
+        const data = await getCallBuckets();
+        setBuckets(data);
+      } catch {
+        // If API fails, use dummy data
+        console.log("Using dummy data while backend is not ready");
+        setBuckets(dummyBuckets);
+      }
+    } catch (error) {
+      setError("Failed to load call buckets");
+      console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        // Try to fetch from API first
-        try {
-          const data = await getCallBuckets();
-          setCallBuckets(data);
-        } catch {
-          // If API fails, use dummy data
-          console.log("Using dummy data while backend is not ready");
-          setCallBuckets(dummyCallBuckets);
-        }
-      } catch (error) {
-        setError("Failed to load call buckets");
-        console.error("Error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number, type: "bucket" | "file") => {
     if (window.confirm("Are you sure you want to delete this call bucket?")) {
       try {
-        await deleteCallBucket(id);
-        setCallBuckets((prevBuckets) =>
-          prevBuckets.filter((bucket) => bucket.id !== id)
-        );
+        if (type === "bucket") {
+          await deleteCallBucket(id);
+          setBuckets((prev) => prev.filter((item) => item.id !== id));
+        }
       } catch (error) {
-        console.error("Error deleting call bucket:", error);
+        console.error(`Error deleting ${type}:`, error);
       }
     }
   };
@@ -153,38 +117,47 @@ const CallBucketsList = () => {
 
   return (
     <>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Call Buckets
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Typography variant="h4" component="h1">
+          Release Notes
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<PlusOneOutlined />}
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          New {activeTab === 0 ? "Call Bucket" : "File"}
+        </Button>
+      </Box>
+
+      <Tabs
+        value={activeTab}
+        onChange={(_, newValue) => setActiveTab(newValue)}
+        sx={{ mb: 2 }}
+      >
+        <Tab label="Call Buckets" />
+        <Tab label="Files" />
+      </Tabs>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Version</TableCell>
-              <TableCell>Release Date</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {callBuckets.map((bucket) => (
+            {buckets.map((bucket) => (
               <TableRow key={bucket.id}>
                 <TableCell>{bucket.title}</TableCell>
-                <TableCell>{bucket.version}</TableCell>
+                <TableCell>-</TableCell>
+
                 <TableCell>
-                  {format(new Date(bucket.release_date), "MMM dd, yyyy")}
+                  {format(new Date(bucket.created_at), "MMM dd, yyyy")}
                 </TableCell>
                 <TableCell>
-                  {bucket.is_published ? "Published" : "Draft"}
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    color="primary"
-                    onClick={() => setPreviewBucket(bucket)}
-                  >
-                    <PreviewIcon />
-                  </IconButton>
                   <IconButton
                     component={RouterLink}
                     to={`/call-buckets/${bucket.id}/edit`}
@@ -194,7 +167,7 @@ const CallBucketsList = () => {
                   </IconButton>
                   <IconButton
                     color="error"
-                    onClick={() => handleDelete(bucket.id)}
+                    onClick={() => handleDelete(bucket.id, "bucket")}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -205,16 +178,13 @@ const CallBucketsList = () => {
         </Table>
       </TableContainer>
 
-      {previewBucket && (
-        <PreviewModal
-          open={Boolean(previewBucket)}
-          onClose={() => setPreviewBucket(null)}
-          title={previewBucket.title}
-          content={previewBucket.content}
-        />
-      )}
+      <CreateCallBucketModal
+        open={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={fetchData}
+      />
     </>
   );
 };
 
-export default CallBucketsList;
+export default BucketsList;

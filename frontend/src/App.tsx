@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import ReleaseNotesList from "./pages/ReleaseNotesList";
-import ReleaseNoteForm from "./pages/ReleaseNoteForm";
+import FileForm from "./pages/FileForm";
 import Layout from "./components/Layout";
 
 const theme = createTheme({
@@ -25,11 +25,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<ReleaseNotesList />} />
-            <Route path="/release-notes/new" element={<ReleaseNoteForm />} />
-            <Route
-              path="/release-notes/:id/edit"
-              element={<ReleaseNoteForm />}
-            />
+            <Route path="/files/:id/edit" element={<FileForm />} />
           </Routes>
         </Layout>
       </Router>
