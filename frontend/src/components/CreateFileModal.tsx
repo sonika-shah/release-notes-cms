@@ -10,113 +10,115 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { slugify } from "../utils/slugify";
+import { Bucket, FileCreate } from "../types/releaseNote";
 import { createFile } from "../services/api";
 
 interface CreateFileModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultDirectory?: string;
 }
 
 const CreateFileModal = ({
   open,
   onClose,
   onSuccess,
+  defaultDirectory = "",
 }: CreateFileModalProps) => {
-  const [name, setName] = useState("");
-  const [directory, setDirectory] = useState("");
-  const [isPublished, setIsPublished] = useState(false);
-  const [content, setContent] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FileCreate>({
+    name: "",
+    directory: defaultDirectory,
+    slug: "",
+    content: "",
+    is_published: false,
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "is_published" ? checked : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
     try {
-      const slug = slugify(name);
-      await createFile({
-        name,
-        slug,
-        directory,
-        content,
-        is_published: isPublished,
-      });
+      console.log("data", formData);
+
+      const buckets = localStorage.getItem("buckets");
+      const parsedBuckets = buckets ? JSON.parse(buckets) : [];
+      const bucket = parsedBuckets.find(
+        (bucket: Bucket) => bucket.slug === formData.directory
+      );
+      if (!bucket) {
+        throw new Error("Bucket not found");
+      }
+      bucket.files = bucket.files ? [...bucket.files, formData] : [formData];
+
+      localStorage.setItem("buckets", buckets);
+
+      await createFile(formData);
       onSuccess();
-      handleClose();
-    } catch (err) {
-      setError("Failed to create file");
-      console.error("Error creating file:", err);
-    } finally {
-      setIsSubmitting(false);
+      onClose();
+    } catch (error) {
+      console.error("Error creating file:", error);
     }
   };
 
-  const handleClose = () => {
-    setName("");
-    setDirectory("");
-    setIsPublished(false);
-    setContent("");
-    setError(null);
-    onClose();
-  };
-
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <form onSubmit={handleSubmit}>
-        <DialogTitle>Create New File</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Create New File</DialogTitle>
+      <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
-          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              autoFocus
-              fullWidth
-              label="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              error={!!error}
-              helperText={error}
-            />
-            <TextField
-              fullWidth
-              label="Directory"
-              value={directory}
-              onChange={(e) => setDirectory(e.target.value)}
-              required
-              placeholder="e.g., /docs/release-notes"
-            />
-            <TextField
-              fullWidth
-              label="Content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              multiline
-              rows={4}
-              required
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={isPublished}
-                  onChange={(e) => setIsPublished(e.target.checked)}
-                />
-              }
-              label="Published"
-            />
-          </Box>
+          <TextField
+            fullWidth
+            label="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Directory"
+            name="directory"
+            value={formData.directory}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Content"
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            margin="normal"
+            multiline
+            rows={4}
+            required
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="is_published"
+                checked={formData.is_published}
+                onChange={handleChange}
+              />
+            }
+            label="Published"
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create"}
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="contained" color="primary">
+            Create
           </Button>
         </DialogActions>
-      </form>
+      </Box>
     </Dialog>
   );
 };

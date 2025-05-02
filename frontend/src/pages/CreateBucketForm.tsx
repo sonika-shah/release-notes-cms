@@ -15,7 +15,7 @@ import {
   getCallBucket,
 } from "../services/api";
 
-const CallBucketForm = () => {
+const CreateBucketForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +68,15 @@ const CallBucketForm = () => {
       if (id) {
         await updateCallBucket(parseInt(id), formData);
       } else {
-        await createCallBucket(formData);
+        const buckets = localStorage.getItem("buckets");
+        const parsedBuckets = buckets ? JSON.parse(buckets) : [];
+        parsedBuckets.push(formData);
+        localStorage.setItem("buckets", JSON.stringify(parsedBuckets));
+
+        await createCallBucket({
+          ...formData,
+          slug: slugify(formData.title),
+        });
       }
       navigate("/");
     } catch (error) {
@@ -103,16 +111,7 @@ const CallBucketForm = () => {
         margin="normal"
         required
       />
-      <TextField
-        fullWidth
-        label="Slug"
-        name="slug"
-        value={formData.slug}
-        onChange={handleChange}
-        margin="normal"
-        required
-        disabled
-      />
+
       <Box sx={{ mt: 2 }}>
         <Button type="submit" variant="contained" color="primary">
           {id ? "Update" : "Create"}
@@ -130,4 +129,4 @@ const CallBucketForm = () => {
   );
 };
 
-export default CallBucketForm;
+export default CreateBucketForm;

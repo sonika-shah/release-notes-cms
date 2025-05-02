@@ -13,15 +13,15 @@ const Layout = ({ children }: LayoutProps) => {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Release Notes CMS
+            Collate CMS
           </Typography>
           <Button
             color="inherit"
             component={RouterLink}
-            to="/release-notes/new"
+            to="/buckets/new"
             startIcon={<AddIcon />}
           >
-            New Release Note
+            New Bucket
           </Button>
         </Toolbar>
       </AppBar>
