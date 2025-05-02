@@ -2,11 +2,12 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql import func
 from .database import Base
 
-class ReleaseNote(Base):
-    __tablename__ = "release_notes"
+class CallBucket(Base):
+    __tablename__ = "call_buckets"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
+    slug = Column(String, unique=True, index=True)
     content = Column(String)
     version = Column(String)
     release_date = Column(DateTime(timezone=True))

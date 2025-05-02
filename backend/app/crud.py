@@ -1,33 +1,33 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 
-def get_release_note(db: Session, release_note_id: int):
-    return db.query(models.ReleaseNote).filter(models.ReleaseNote.id == release_note_id).first()
+def get_call_bucket(db: Session, call_bucket_id: int):
+    return db.query(models.CallBucket).filter(models.CallBucket.id == call_bucket_id).first()
 
-def get_release_notes(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.ReleaseNote).offset(skip).limit(limit).all()
+def get_call_buckets(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.CallBucket).offset(skip).limit(limit).all()
 
-def create_release_note(db: Session, release_note: schemas.ReleaseNoteCreate):
-    db_release_note = models.ReleaseNote(**release_note.model_dump())
-    db.add(db_release_note)
+def create_call_bucket(db: Session, call_bucket: schemas.CallBucketCreate):
+    db_call_bucket = models.CallBucket(**call_bucket.model_dump())
+    db.add(db_call_bucket)
     db.commit()
-    db.refresh(db_release_note)
-    return db_release_note
+    db.refresh(db_call_bucket)
+    return db_call_bucket
 
-def update_release_note(db: Session, release_note_id: int, release_note: schemas.ReleaseNoteUpdate):
-    db_release_note = db.query(models.ReleaseNote).filter(models.ReleaseNote.id == release_note_id).first()
-    if db_release_note:
-        update_data = release_note.model_dump(exclude_unset=True)
+def update_call_bucket(db: Session, call_bucket_id: int, call_bucket: schemas.CallBucketUpdate):
+    db_call_bucket = db.query(models.CallBucket).filter(models.CallBucket.id == call_bucket_id).first()
+    if db_call_bucket:
+        update_data = call_bucket.model_dump(exclude_unset=True)
         for key, value in update_data.items():
-            setattr(db_release_note, key, value)
+            setattr(db_call_bucket, key, value)
         db.commit()
-        db.refresh(db_release_note)
-    return db_release_note
+        db.refresh(db_call_bucket)
+    return db_call_bucket
 
-def delete_release_note(db: Session, release_note_id: int):
-    db_release_note = db.query(models.ReleaseNote).filter(models.ReleaseNote.id == release_note_id).first()
-    if db_release_note:
-        db.delete(db_release_note)
+def delete_call_bucket(db: Session, call_bucket_id: int):
+    db_call_bucket = db.query(models.CallBucket).filter(models.CallBucket.id == call_bucket_id).first()
+    if db_call_bucket:
+        db.delete(db_call_bucket)
         db.commit()
         return True
     return False 

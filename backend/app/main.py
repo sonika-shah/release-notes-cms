@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
-from .routers import release_notes
 from . import crud, models, schemas
 from .database import engine, get_db
 
@@ -11,8 +10,8 @@ from .database import engine, get_db
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Release Notes CMS",
-    description="A modern Content Management System for managing release notes",
+    title="Call Bucket CMS",
+    description="A modern Content Management System for managing call buckets",
     version="1.0.0"
 )
 
@@ -25,46 +24,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(release_notes.router)
-
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Release Notes CMS API"}
+    return {"message": "Welcome to Call Bucket CMS API"}
 
-@app.get("/release-notes/", response_model=List[schemas.ReleaseNote])
-def read_release_notes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    release_notes = crud.get_release_notes(db, skip=skip, limit=limit)
-    return release_notes
+@app.get("/call-buckets/", response_model=List[schemas.CallBucket])
+def read_call_buckets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    call_buckets = crud.get_call_buckets(db, skip=skip, limit=limit)
+    return call_buckets
 
-@app.get("/release-notes/{release_note_id}", response_model=schemas.ReleaseNote)
-def read_release_note(release_note_id: int, db: Session = Depends(get_db)):
-    db_release_note = crud.get_release_note(db, release_note_id=release_note_id)
-    if db_release_note is None:
-        raise HTTPException(status_code=404, detail="Release note not found")
-    return db_release_note
+@app.get("/call-buckets/{call_bucket_id}", response_model=schemas.CallBucket)
+def read_call_bucket(call_bucket_id: int, db: Session = Depends(get_db)):
+    db_call_bucket = crud.get_call_bucket(db, call_bucket_id=call_bucket_id)
+    if db_call_bucket is None:
+        raise HTTPException(status_code=404, detail="Call bucket not found")
+    return db_call_bucket
 
-@app.post("/release-notes/", response_model=schemas.ReleaseNote)
-def create_release_note(release_note: schemas.ReleaseNoteCreate, db: Session = Depends(get_db)):
-    return crud.create_release_note(db=db, release_note=release_note)
+@app.post("/call-buckets/", response_model=schemas.CallBucket)
+def create_call_bucket(call_bucket: schemas.CallBucketCreate, db: Session = Depends(get_db)):
+    return crud.create_call_bucket(db=db, call_bucket=call_bucket)
 
-@app.put("/release-notes/{release_note_id}", response_model=schemas.ReleaseNote)
-def update_release_note(
-    release_note_id: int,
-    release_note: schemas.ReleaseNoteUpdate,
+@app.put("/call-buckets/{call_bucket_id}", response_model=schemas.CallBucket)
+def update_call_bucket(
+    call_bucket_id: int,
+    call_bucket: schemas.CallBucketUpdate,
     db: Session = Depends(get_db)
 ):
-    db_release_note = crud.update_release_note(db, release_note_id=release_note_id, release_note=release_note)
-    if db_release_note is None:
-        raise HTTPException(status_code=404, detail="Release note not found")
-    return db_release_note
+    db_call_bucket = crud.update_call_bucket(db, call_bucket_id=call_bucket_id, call_bucket=call_bucket)
+    if db_call_bucket is None:
+        raise HTTPException(status_code=404, detail="Call bucket not found")
+    return db_call_bucket
 
-@app.delete("/release-notes/{release_note_id}")
-def delete_release_note(release_note_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_release_note(db, release_note_id=release_note_id)
+@app.delete("/call-buckets/{call_bucket_id}")
+def delete_call_bucket(call_bucket_id: int, db: Session = Depends(get_db)):
+    success = crud.delete_call_bucket(db, call_bucket_id=call_bucket_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Release note not found")
-    return {"message": "Release note deleted successfully"}
+        raise HTTPException(status_code=404, detail="Call bucket not found")
+    return {"message": "Call bucket deleted successfully"}
 
 @app.get("/health")
 async def health_check():

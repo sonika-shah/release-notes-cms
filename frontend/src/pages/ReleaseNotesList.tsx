@@ -17,15 +17,16 @@ import { format } from "date-fns";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PreviewIcon from "@mui/icons-material/Preview";
-import { ReleaseNote } from "../types/releaseNote";
-import { getReleaseNotes, deleteReleaseNote } from "../services/api";
+import { CallBucket } from "../types/releaseNote";
+import { getCallBuckets, deleteCallBucket } from "../services/api";
 import PreviewModal from "../components/PreviewModal";
 
 // Dummy data for testing
-const dummyReleaseNotes: ReleaseNote[] = [
+const dummyCallBuckets: CallBucket[] = [
   {
     id: 1,
     title: "Version 1.0.0 Release",
+    slug: "version-1-0-0-release",
     content: `# 1.7.0 Release 🎉
 
 **Apr 15th, 2025**
@@ -65,6 +66,7 @@ OpenMetadata provides workflows out of the box to extract different types of met
   {
     id: 2,
     title: "Version 1.1.0 Release",
+    slug: "version-1-1-0-release",
     content: "Added new features and bug fixes",
     version: "1.1.0",
     release_date: "2024-05-02T00:00:00Z",
@@ -75,6 +77,7 @@ OpenMetadata provides workflows out of the box to extract different types of met
   {
     id: 3,
     title: "Version 1.2.0 Release",
+    slug: "version-1-2-0-release",
     content: "Performance improvements and UI enhancements",
     version: "1.2.0",
     release_date: "2024-05-03T00:00:00Z",
@@ -84,11 +87,11 @@ OpenMetadata provides workflows out of the box to extract different types of met
   },
 ];
 
-const ReleaseNotesList = () => {
-  const [releaseNotes, setReleaseNotes] = useState<ReleaseNote[]>([]);
+const CallBucketsList = () => {
+  const [callBuckets, setCallBuckets] = useState<CallBucket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [previewNote, setPreviewNote] = useState<ReleaseNote | null>(null);
+  const [previewBucket, setPreviewBucket] = useState<CallBucket | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,15 +99,15 @@ const ReleaseNotesList = () => {
         setIsLoading(true);
         // Try to fetch from API first
         try {
-          const data = await getReleaseNotes();
-          setReleaseNotes(data);
+          const data = await getCallBuckets();
+          setCallBuckets(data);
         } catch {
           // If API fails, use dummy data
           console.log("Using dummy data while backend is not ready");
-          setReleaseNotes(dummyReleaseNotes);
+          setCallBuckets(dummyCallBuckets);
         }
       } catch (error) {
-        setError("Failed to load release notes");
+        setError("Failed to load call buckets");
         console.error("Error:", error);
       } finally {
         setIsLoading(false);
@@ -115,14 +118,14 @@ const ReleaseNotesList = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this release note?")) {
+    if (window.confirm("Are you sure you want to delete this call bucket?")) {
       try {
-        await deleteReleaseNote(id);
-        setReleaseNotes((prevNotes) =>
-          prevNotes.filter((note) => note.id !== id)
+        await deleteCallBucket(id);
+        setCallBuckets((prevBuckets) =>
+          prevBuckets.filter((bucket) => bucket.id !== id)
         );
       } catch (error) {
-        console.error("Error deleting release note:", error);
+        console.error("Error deleting call bucket:", error);
       }
     }
   };
@@ -151,7 +154,7 @@ const ReleaseNotesList = () => {
   return (
     <>
       <Typography variant="h4" component="h1" gutterBottom>
-        Release Notes
+        Call Buckets
       </Typography>
       <TableContainer component={Paper}>
         <Table>
@@ -165,33 +168,33 @@ const ReleaseNotesList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {releaseNotes.map((note) => (
-              <TableRow key={note.id}>
-                <TableCell>{note.title}</TableCell>
-                <TableCell>{note.version}</TableCell>
+            {callBuckets.map((bucket) => (
+              <TableRow key={bucket.id}>
+                <TableCell>{bucket.title}</TableCell>
+                <TableCell>{bucket.version}</TableCell>
                 <TableCell>
-                  {format(new Date(note.release_date), "MMM dd, yyyy")}
+                  {format(new Date(bucket.release_date), "MMM dd, yyyy")}
                 </TableCell>
                 <TableCell>
-                  {note.is_published ? "Published" : "Draft"}
+                  {bucket.is_published ? "Published" : "Draft"}
                 </TableCell>
                 <TableCell>
                   <IconButton
                     color="primary"
-                    onClick={() => setPreviewNote(note)}
+                    onClick={() => setPreviewBucket(bucket)}
                   >
                     <PreviewIcon />
                   </IconButton>
                   <IconButton
                     component={RouterLink}
-                    to={`/release-notes/${note.id}/edit`}
+                    to={`/call-buckets/${bucket.id}/edit`}
                     color="primary"
                   >
                     <EditIcon />
                   </IconButton>
                   <IconButton
                     color="error"
-                    onClick={() => handleDelete(note.id)}
+                    onClick={() => handleDelete(bucket.id)}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -202,16 +205,16 @@ const ReleaseNotesList = () => {
         </Table>
       </TableContainer>
 
-      {previewNote && (
+      {previewBucket && (
         <PreviewModal
-          open={Boolean(previewNote)}
-          onClose={() => setPreviewNote(null)}
-          title={previewNote.title}
-          content={previewNote.content}
+          open={Boolean(previewBucket)}
+          onClose={() => setPreviewBucket(null)}
+          title={previewBucket.title}
+          content={previewBucket.content}
         />
       )}
     </>
   );
 };
 
-export default ReleaseNotesList;
+export default CallBucketsList;

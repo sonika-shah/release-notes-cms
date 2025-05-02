@@ -1,6 +1,7 @@
-export interface ReleaseNote {
+export interface CallBucket {
   id: number;
   title: string;
+  slug: string;
   content: string;
   version: string;
   release_date: string;
@@ -9,16 +10,18 @@ export interface ReleaseNote {
   updated_at: string | null;
 }
 
-export interface ReleaseNoteCreate {
+export interface CallBucketCreate {
   title: string;
+  slug: string;
   content: string;
   version: string;
   release_date: string;
   is_published: boolean;
 }
 
-export interface ReleaseNoteUpdate {
+export interface CallBucketUpdate {
   title?: string;
+  slug?: string;
   content?: string;
   version?: string;
   release_date?: string;

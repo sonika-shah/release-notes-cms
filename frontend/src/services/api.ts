@@ -1,44 +1,65 @@
-import axios from "axios";
 import {
-  ReleaseNote,
-  ReleaseNoteCreate,
-  ReleaseNoteUpdate,
+  CallBucket,
+  CallBucketCreate,
+  CallBucketUpdate,
 } from "../types/releaseNote";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "http://localhost:8000";
 
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export const getReleaseNotes = async (): Promise<ReleaseNote[]> => {
-  const response = await api.get("/release-notes");
-  return response.data;
+export const getCallBuckets = async (): Promise<CallBucket[]> => {
+  const response = await fetch(`${API_URL}/call-buckets/`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch call buckets");
+  }
+  return response.json();
 };
 
-export const getReleaseNote = async (id: number): Promise<ReleaseNote> => {
-  const response = await api.get(`/release-notes/${id}`);
-  return response.data;
+export const getCallBucket = async (id: number): Promise<CallBucket> => {
+  const response = await fetch(`${API_URL}/call-buckets/${id}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch call bucket");
+  }
+  return response.json();
 };
 
-export const createReleaseNote = async (
-  data: ReleaseNoteCreate
-): Promise<ReleaseNote> => {
-  const response = await api.post("/release-notes", data);
-  return response.data;
+export const createCallBucket = async (
+  bucket: CallBucketCreate
+): Promise<CallBucket> => {
+  const response = await fetch(`${API_URL}/call-buckets/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(bucket),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to create call bucket");
+  }
+  return response.json();
 };
 
-export const updateReleaseNote = async (
+export const updateCallBucket = async (
   id: number,
-  data: ReleaseNoteUpdate
-): Promise<ReleaseNote> => {
-  const response = await api.put(`/release-notes/${id}`, data);
-  return response.data;
+  bucket: CallBucketUpdate
+): Promise<CallBucket> => {
+  const response = await fetch(`${API_URL}/call-buckets/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(bucket),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update call bucket");
+  }
+  return response.json();
 };
 
-export const deleteReleaseNote = async (id: number): Promise<void> => {
-  await api.delete(`/release-notes/${id}`);
+export const deleteCallBucket = async (id: number): Promise<void> => {
+  const response = await fetch(`${API_URL}/call-buckets/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to delete call bucket");
+  }
 };
