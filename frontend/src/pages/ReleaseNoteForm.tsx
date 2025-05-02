@@ -8,6 +8,7 @@ import {
   FormControlLabel,
   Checkbox,
   Box,
+  CircularProgress,
 } from "@mui/material";
 import { ReleaseNoteCreate } from "../types/releaseNote";
 import {
@@ -15,6 +16,47 @@ import {
   createReleaseNote,
   updateReleaseNote,
 } from "../services/api";
+
+// Dummy data for testing
+const dummyReleaseNote = {
+  id: 1,
+  title: "Version 1.0.0 Release",
+  content: `# 1.7.0 Release 🎉
+
+**Apr 15th, 2025**
+
+You can find the GitHub release [here](https://github.com/open-metadata/OpenMetadata/releases/tag/1.7.0-release).
+
+The latest Release 1.7 of OpenMetadata and Collate delivers new features to accelerate the onboarding of both data services and users, taking discovery, automations, and customizations one step further.
+
+# What's Changed
+
+## Breaking Changes
+
+### Removing support for Python 3.8
+
+Python 3.8 was [officially EOL on 2024-10-07](https://devguide.python.org/versions/). Some of our dependencies have already
+started removing support for higher versions, and are following suit to ensure we are using the latest and most stable
+versions of our dependencies.
+
+This means that for Release 1.7, the supported Python versions for the Ingestion Framework are 3.9, 3.10 and 3.11.
+
+We were already shipping our Docker images with Python 3.10, so this change should not affect you if you are using our Docker images.
+However, if you installed the \`openmetadata-ingestion\` package directly, please make sure to update your Python version to 3.9 or higher.
+
+# What's New
+
+### Putting your Metadata Ingestion on AutoPilot
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lo4SrBAmTZM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+OpenMetadata provides workflows out of the box to extract different types of metadata from your data services such as schemas, lineage, usage and profiling. To accelerate the onboarding of new services, we have created the new AutoPilot Application, which will automatically deploy and trigger all these Metadata Agents when a new service is created!`,
+  version: "1.0.0",
+  release_date: "2024-05-01T00:00:00Z",
+  is_published: true,
+  created_at: "2024-04-30T00:00:00Z",
+  updated_at: null,
+};
 
 const ReleaseNoteForm = () => {
   const navigate = useNavigate();
@@ -28,6 +70,8 @@ const ReleaseNoteForm = () => {
     release_date: new Date().toISOString().split("T")[0],
     is_published: false,
   });
+  const [isLoading, setIsLoading] = useState(isEdit);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isEdit && id) {
@@ -37,16 +81,32 @@ const ReleaseNoteForm = () => {
 
   const fetchReleaseNote = async (noteId: number) => {
     try {
-      const data = await getReleaseNote(noteId);
-      setFormData({
-        title: data.title,
-        content: data.content,
-        version: data.version,
-        release_date: data.release_date.split("T")[0],
-        is_published: data.is_published,
-      });
+      setIsLoading(true);
+      try {
+        const data = await getReleaseNote(noteId);
+        setFormData({
+          title: data.title,
+          content: data.content,
+          version: data.version,
+          release_date: data.release_date.split("T")[0],
+          is_published: data.is_published,
+        });
+      } catch {
+        // If API fails, use dummy data
+        console.log("Using dummy data while backend is not ready");
+        setFormData({
+          title: dummyReleaseNote.title,
+          content: dummyReleaseNote.content,
+          version: dummyReleaseNote.version,
+          release_date: dummyReleaseNote.release_date.split("T")[0],
+          is_published: dummyReleaseNote.is_published,
+        });
+      }
     } catch (error) {
-      console.error("Error fetching release note:", error);
+      setError("Failed to load release note");
+      console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -69,8 +129,31 @@ const ReleaseNoteForm = () => {
       navigate("/");
     } catch (error) {
       console.error("Error saving release note:", error);
+      // For now, just navigate back even if the API call fails
+      navigate("/");
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="200px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Typography color="error" variant="h6">
+        {error}
+      </Typography>
+    );
+  }
 
   return (
     <Paper sx={{ p: 3 }}>
