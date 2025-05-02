@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
-import ReleaseNotesList from "./pages/ReleaseNotesList";
+import BucketsList from "./pages/ReleaseNotesList";
+import CallBucketForm from "./pages/CallBucketForm";
 import FileForm from "./pages/FileForm";
 import Layout from "./components/Layout";
 
@@ -24,7 +25,10 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<ReleaseNotesList />} />
+            <Route path="/" element={<BucketsList />} />
+            <Route path="/call-buckets/new" element={<CallBucketForm />} />
+            <Route path="/call-buckets/:id/edit" element={<CallBucketForm />} />
+            <Route path="/files/new" element={<FileForm />} />
             <Route path="/files/:id/edit" element={<FileForm />} />
           </Routes>
         </Layout>
