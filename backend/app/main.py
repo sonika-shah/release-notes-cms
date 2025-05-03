@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -22,8 +24,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Mount static files
-app.mount("/storage", StaticFiles(directory="app/storage"), name="storage")
+# Middleware to disable caching
+class NoCacheMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+app.add_middleware(NoCacheMiddleware)
+
+# Mount static files with no caching
+app.mount("/storage", StaticFiles(directory="app/storage", html=True), name="storage")
 
 # Configure CORS
 app.add_middleware(
@@ -160,7 +173,12 @@ async def download_file(file_id: int, db: Session = Depends(get_db)):
     return FileResponse(
         path=db_file.storage_path,
         filename=db_file.original_name,
-        media_type=db_file.file_type
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
     )
 
 @app.get("/files/{file_id}", response_model=File)
