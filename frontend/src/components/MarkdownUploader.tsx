@@ -149,7 +149,7 @@ const IframeWrapper = styled(Box)({
 });
 
 interface MarkdownUploaderProps {
-  onFileSelect: (fileData: FileCreate) => void;
+  onFileSelect: (fileData: File) => void;
   initialContent?: string;
 }
 
@@ -162,26 +162,19 @@ export const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">(
     "split"
   );
+  const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (file && file.type === "text/markdown") {
         setFileName(file.name);
+        setFile(file);
         const reader = new FileReader();
         reader.onload = (e) => {
           const content = e.target?.result as string;
           setContent(content);
-          onFileSelect({
-            name: file.name,
-            slug: file.name
-              .replace(/\.md$/, "")
-              .toLowerCase()
-              .replace(/\s+/g, "-"),
-            directory: "/",
-            content: content,
-            is_published: false,
-          });
+          onFileSelect(file);
         };
         reader.readAsText(file);
       } else {
@@ -195,18 +188,13 @@ export const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newContent = event.target.value;
       setContent(newContent);
-      onFileSelect({
-        name: fileName || "untitled.md",
-        slug: (fileName || "untitled")
-          .replace(/\.md$/, "")
-          .toLowerCase()
-          .replace(/\s+/g, "-"),
-        directory: "/",
-        content: newContent,
-        is_published: false,
-      });
+      onFileSelect(
+        new File([newContent], fileName, {
+          type: file?.type,
+        })
+      );
     },
-    [fileName, onFileSelect]
+    [fileName, onFileSelect, file]
   );
 
   const components = {

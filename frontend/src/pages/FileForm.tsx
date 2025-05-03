@@ -1,92 +1,57 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   TextField,
   Button,
   Box,
   Typography,
-  FormControlLabel,
-  Checkbox,
   CircularProgress,
 } from "@mui/material";
-import { slugify } from "../utils/slugify";
-import { FileCreate, Files } from "../types/releaseNote";
-import { createFile, updateFile } from "../services/api";
+import { FileCreate } from "../types/releaseNote";
+import { createFile } from "../services/api";
 import { MarkdownUploader } from "../components/MarkdownUploader";
 
 const FileForm = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
-
+  const { bucketId } = useParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [fileContent, setFileContent] = useState<string>("");
-  const [formData, setFormData] = useState<Files>({
-    id: 0,
-    name: "",
-    slug: "",
-    bucketId: parseInt(id || "0"),
-    is_published: false,
-    created_at: new Date().toISOString(),
-    updated_at: null,
+  const [formData, setFormData] = useState<FileCreate>({
+    description: "",
+    original_name: "",
     file: new File([], ""),
+    bucketId: 0,
   });
 
-  useEffect(() => {
-    if (id) {
-      const fetchData = async () => {
-        try {
-          setIsLoading(true);
-          //   const data = await getFile(parseInt(id));
-          //   setFormData(data);
-        } catch (error) {
-          console.error("Error fetching file:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchData();
-    }
-  }, [id]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-
-    setFormData((prev) => {
-      const newData = {
-        ...prev,
-        [name]: type === "checkbox" ? checked : value,
-      };
-
-      // Automatically generate slug when name changes
-      if (name === "name") {
-        newData.slug = slugify(value);
-      }
-
-      return newData;
-    });
-  };
-
-  const handleFileSelect = async (fileData: FileCreate) => {
+  const handleFileSelect = async (file: File) => {
     setFormData((prev) => ({
       ...prev,
-      file: fileData.file,
+      file,
+      original_name: file.name ?? formData.original_name,
     }));
-    setFileContent(await fileData.file.text());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (id) {
-        await updateFile(parseInt(id), {
-          ...formData,
-        });
-      } else {
-        await createFile(parseInt(id ?? "0"), formData);
+      if (!bucketId) {
+        throw new Error("Bucket ID is required");
       }
-      navigate("/");
+
+      if (!formData.file) {
+        throw new Error("File is required");
+      }
+
+      setIsLoading(true);
+      await createFile(parseInt(bucketId), {
+        ...formData,
+        file: formData.file,
+      });
+
+      navigate(`/buckets/${bucketId}`);
     } catch (error) {
-      console.error("Error saving file:", error);
+      console.error("Error creating file:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,50 +71,48 @@ const FileForm = () => {
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        {id ? "Edit File" : "New File"}
+        New File
       </Typography>
-      <TextField
-        fullWidth
-        label="Name"
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        margin="normal"
-        required
-      />
 
       <TextField
         fullWidth
-        label="Directory"
-        name="directory"
-        value={formData.bucketId}
-        onChange={handleChange}
+        label="Name"
+        name="original_name"
+        value={formData.original_name}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, original_name: e.target.value }))
+        }
         margin="normal"
         required
-        placeholder="e.g., /docs/release-notes"
       />
-      <MarkdownUploader
-        onFileSelect={handleFileSelect}
-        initialContent={fileContent}
-      />
-      <FormControlLabel
-        control={
-          <Checkbox
-            name="is_published"
-            checked={formData.is_published}
-            onChange={handleChange}
-          />
+      <TextField
+        fullWidth
+        multiline
+        minRows={3}
+        label="Description"
+        name="description"
+        value={formData.description}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, description: e.target.value }))
         }
-        label="Published"
+        margin="normal"
       />
+
+      <MarkdownUploader onFileSelect={handleFileSelect} initialContent="" />
+
       <Box sx={{ mt: 2 }}>
-        <Button type="submit" variant="contained" color="primary">
-          {id ? "Update" : "Create"}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={!formData.file}
+        >
+          Create
         </Button>
         <Button
           variant="outlined"
           color="secondary"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(-1)}
           sx={{ ml: 2 }}
         >
           Cancel

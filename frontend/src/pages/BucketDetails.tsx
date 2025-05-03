@@ -246,7 +246,6 @@ export const BucketDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<Files | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [contentView, setContentView] = useState<"edit" | "preview">("edit");
 
   useEffect(() => {
     const fetchBucketDetails = async () => {
@@ -398,64 +397,12 @@ export const BucketDetails: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate(`/files/new?bucket=${bucket.id}`)}
+            onClick={() => navigate(`/buckets/${id}/files/new`)}
           >
             Add File
           </Button>
         </Stack>
       </Stack>
-
-      {bucket.content && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography variant="h5">Content</Typography>
-            <Tabs
-              value={contentView}
-              onChange={(_, newValue: "edit" | "preview") =>
-                setContentView(newValue)
-              }
-            >
-              <Tab value="edit" label="Edit" />
-              <Tab value="preview" label="Preview" />
-            </Tabs>
-          </Stack>
-          {contentView === "preview" ? (
-            <PreviewPane elevation={0}>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-              >
-                {bucket.content}
-              </ReactMarkdown>
-            </PreviewPane>
-          ) : (
-            <TextField
-              fullWidth
-              multiline
-              value={bucket.content}
-              onChange={(e) => {
-                setBucket((prev) =>
-                  prev ? { ...prev, content: e.target.value } : null
-                );
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  height: "100%",
-                  alignItems: "flex-start",
-                },
-                "& textarea": {
-                  height: "100% !important",
-                },
-              }}
-            />
-          )}
-        </Paper>
-      )}
 
       <Typography variant="h5" mb={2}>
         Files
@@ -465,6 +412,7 @@ export const BucketDetails: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
+              <TableCell>Description</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Size</TableCell>
               <TableCell>Uploaded</TableCell>
@@ -484,6 +432,7 @@ export const BucketDetails: React.FC = () => {
                 }}
               >
                 <TableCell>{file.original_name}</TableCell>
+                <TableCell>{file.description}</TableCell>
                 <TableCell>{file.file_type}</TableCell>
                 <TableCell>
                   {file.file_size

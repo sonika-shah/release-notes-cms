@@ -31,6 +31,7 @@ export interface Files {
 
 export interface FileCreate {
   bucketId: number;
+  original_name: string;
   description: string;
   file: File;
 }

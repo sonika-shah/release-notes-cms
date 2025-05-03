@@ -32,7 +32,6 @@ function App() {
             <Route path="/buckets/:bucketId/files/new" element={<FileForm />} />
             <Route path="/files/:id/edit" element={<FileForm />} />
             <Route path="/buckets/:id" element={<BucketDetails />} />
-            <Route path="/files/new" element={<FileForm />} />
           </Routes>
         </Layout>
       </Router>
