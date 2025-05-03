@@ -1,11 +1,10 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 
-def get_bucket(db: Session, call_bucket_id: int):
-    return db.query(models.CallBucket).filter(models.CallBucket.id == call_bucket_id).first()
+def get_bucket(db: Session, bucket_id: int):
+    return db.query(models.Bucket).filter(models.Bucket.id == bucket_id).first()
 
 def get_buckets(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.CallBucket).offset(skip).limit(limit).all()
     return db.query(models.Bucket).offset(skip).limit(limit).all()
 
 def create_bucket(db: Session, bucket: schemas.BucketCreate):
@@ -23,12 +22,12 @@ def update_bucket(db: Session, bucket_id: int, bucket: schemas.BucketUpdate):
             setattr(db_bucket, key, value)
         db.commit()
         db.refresh(db_bucket)
-    return db_call_bucket
+    return db_bucket
 
-def delete_call_bucket(db: Session, call_bucket_id: int):
-    db_call_bucket = db.query(models.CallBucket).filter(models.CallBucket.id == call_bucket_id).first()
-    if db_call_bucket:
-        db.delete(db_call_bucket)
+def delete_bucket(db: Session, bucket_id: int):
+    db_bucket = db.query(models.Bucket).filter(models.Bucket.id == bucket_id).first()
+    if db_bucket:
+        db.delete(db_bucket)
         db.commit()
         return True
     return False 
