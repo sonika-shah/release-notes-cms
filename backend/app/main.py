@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File as FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.openapi.utils import get_openapi
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -21,10 +22,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Mount static files
+app.mount("/storage", StaticFiles(directory="app/storage"), name="storage")
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React frontend URL
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

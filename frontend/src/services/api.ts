@@ -2,8 +2,8 @@ import {
   Bucket,
   BucketCreate,
   BucketUpdate,
-  File,
   FileCreate,
+  Files,
 } from "../types/releaseNote";
 
 const API_URL = "/api";
@@ -86,13 +86,23 @@ export const createFile = async (
   bucketId: number,
   file: FileCreate
 ): Promise<File> => {
+  const formData = new FormData();
+
+  // Append the file to FormData
+  if (file.file) {
+    formData.append("file", file.file);
+  }
+
+  // Append description if it exists
+  if (file.description) {
+    formData.append("description", file.description);
+  }
+
   const response = await fetch(`${API_URL}/buckets/${bucketId}/files/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    body: JSON.stringify(file),
+    body: formData,
   });
+
   if (!response.ok) {
     throw new Error("Failed to create file");
   }
@@ -120,6 +130,14 @@ export const deleteFile = async (id: number): Promise<void> => {
   if (!response.ok) {
     throw new Error("Failed to delete file");
   }
+};
+
+export const getFileById = async (id: number): Promise<Files> => {
+  const response = await fetch(`${API_URL}/files/${id}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch file");
+  }
+  return response.json();
 };
 
 export const fetchFileContent = async (fileId?: number) => {

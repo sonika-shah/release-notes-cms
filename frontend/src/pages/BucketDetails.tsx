@@ -215,16 +215,6 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             multiline
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            sx={{
-              height: "100%",
-              "& .MuiOutlinedInput-root": {
-                height: "100%",
-                alignItems: "flex-start",
-              },
-              "& textarea": {
-                height: "100% !important",
-              },
-            }}
           />
         )}
       </DialogContent>
