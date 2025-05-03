@@ -6,10 +6,10 @@ import {
   FileCreate,
 } from "../types/releaseNote";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "/api";
 
 export const getCallBuckets = async (): Promise<Bucket[]> => {
-  const response = await fetch(`${API_URL}/call-buckets/`);
+  const response = await fetch(`${API_URL}/buckets/`);
   if (!response.ok) {
     throw new Error("Failed to fetch call buckets");
   }

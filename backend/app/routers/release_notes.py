@@ -4,23 +4,23 @@ from typing import List
 from .. import crud, schemas
 from ..database import get_db
 
-router = APIRouter(prefix="/api/release-notes", tags=["release-notes"])
+router = APIRouter(prefix="/api/buckets", tags=["buckets"])
 
-@router.post("/", response_model=schemas.ReleaseNote)
-def create_release_note(release_note: schemas.ReleaseNoteCreate, db: Session = Depends(get_db)):
-    return crud.create_release_note(db=db, release_note=release_note)
+@router.post("/", response_model=schemas.Bucket)
+def create_bucket(bucket: schemas.BucketCreate, db: Session = Depends(get_db)):
+    return crud.create_bucket(db=db, bucket=bucket)
 
-@router.get("/", response_model=List[schemas.ReleaseNote])
-def read_release_notes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    release_notes = crud.get_release_notes(db, skip=skip, limit=limit)
-    return release_notes
+@router.get("/", response_model=List[schemas.Bucket])
+def read_buckets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    buckets = crud.get_buckets(db, skip=skip, limit=limit)
+    return buckets
 
-@router.get("/{release_note_id}", response_model=schemas.ReleaseNote)
-def read_release_note(release_note_id: int, db: Session = Depends(get_db)):
-    db_release_note = crud.get_release_note(db, release_note_id=release_note_id)
-    if db_release_note is None:
-        raise HTTPException(status_code=404, detail="Release note not found")
-    return db_release_note
+@router.get("/{bucket_id}", response_model=schemas.Bucket)
+def read_bucket(bucket_id: int, db: Session = Depends(get_db)):
+    db_bucket = crud.get_bucket(db, bucket_id=bucket_id)
+    if db_bucket is None:
+        raise HTTPException(status_code=404, detail="Bucket not found")
+    return db_bucket
 
 @router.put("/{release_note_id}", response_model=schemas.ReleaseNote)
 def update_release_note(

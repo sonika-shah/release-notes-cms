@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-class CallBucketBase(BaseModel):
+class BucketBase(BaseModel):
     title: str
     slug: str
     content: str
@@ -10,10 +10,10 @@ class CallBucketBase(BaseModel):
     release_date: datetime
     is_published: bool = False
 
-class CallBucketCreate(CallBucketBase):
+class BucketCreate(BucketBase):
     pass
 
-class CallBucketUpdate(BaseModel):
+class BucketUpdate(BaseModel):
     title: Optional[str] = None
     slug: Optional[str] = None
     content: Optional[str] = None
@@ -21,7 +21,7 @@ class CallBucketUpdate(BaseModel):
     release_date: Optional[datetime] = None
     is_published: Optional[bool] = None
 
-class CallBucket(CallBucketBase):
+class Bucket(BucketBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
