@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 
-def get_call_bucket(db: Session, call_bucket_id: int):
+def get_bucket(db: Session, call_bucket_id: int):
     return db.query(models.CallBucket).filter(models.CallBucket.id == call_bucket_id).first()
 
-def get_call_buckets(db: Session, skip: int = 0, limit: int = 100):
+def get_buckets(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.CallBucket).offset(skip).limit(limit).all()
     return db.query(models.Bucket).offset(skip).limit(limit).all()
 

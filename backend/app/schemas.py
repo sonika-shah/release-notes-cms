@@ -5,10 +5,6 @@ from typing import Optional
 class BucketBase(BaseModel):
     title: str
     slug: str
-    content: str
-    version: str
-    release_date: datetime
-    is_published: bool = False
 
 class BucketCreate(BucketBase):
     pass

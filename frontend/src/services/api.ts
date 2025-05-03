@@ -17,7 +17,7 @@ export const getCallBuckets = async (): Promise<Bucket[]> => {
 };
 
 export const getCallBucket = async (id: number): Promise<Bucket> => {
-  const response = await fetch(`${API_URL}/call-buckets/${id}`);
+  const response = await fetch(`${API_URL}/buckets/${id}`);
   if (!response.ok) {
     throw new Error("Failed to fetch call bucket");
   }
@@ -27,7 +27,7 @@ export const getCallBucket = async (id: number): Promise<Bucket> => {
 export const createCallBucket = async (
   bucket: BucketCreate
 ): Promise<Bucket> => {
-  const response = await fetch(`${API_URL}/call-buckets/`, {
+  const response = await fetch(`${API_URL}/buckets/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +44,7 @@ export const updateCallBucket = async (
   id: number,
   bucket: BucketUpdate
 ): Promise<Bucket> => {
-  const response = await fetch(`${API_URL}/call-buckets/${id}`, {
+  const response = await fetch(`${API_URL}/buckets/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export const updateCallBucket = async (
 };
 
 export const deleteCallBucket = async (id: number): Promise<void> => {
-  const response = await fetch(`${API_URL}/call-buckets/${id}`, {
+  const response = await fetch(`${API_URL}/buckets/${id}`, {
     method: "DELETE",
   });
   if (!response.ok) {

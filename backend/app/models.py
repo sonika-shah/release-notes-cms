@@ -2,8 +2,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql import func
 from .database import Base
 
-class CallBucket(Base):
-    __tablename__ = "call_buckets"
+class Bucket(Base):
+    __tablename__ = "buckets"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
