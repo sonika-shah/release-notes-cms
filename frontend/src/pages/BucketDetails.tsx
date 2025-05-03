@@ -32,7 +32,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import styled from "@emotion/styled";
-import { fetchFileContent } from "../services/api";
+import { fetchFileContent, updateFile } from "../services/api";
 
 const PreviewPane = styled(Paper)({
   flex: 1,
@@ -344,13 +344,12 @@ export const BucketDetails: React.FC = () => {
   const handleSaveFile = async (content: string) => {
     if (!selectedFile) return;
     try {
-      const response = await fetch(`/api/files/${selectedFile.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content }),
-      });
+      const response = await updateFile(
+        selectedFile.id,
+        new File([content], selectedFile.original_name, {
+          type: selectedFile.file_type,
+        })
+      );
 
       if (!response.ok) {
         throw new Error("Failed to save file");

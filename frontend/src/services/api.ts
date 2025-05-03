@@ -99,16 +99,13 @@ export const createFile = async (
   return response.json();
 };
 
-export const updateFile = async (
-  id: number,
-  file: Partial<FileCreate>
-): Promise<File> => {
-  const response = await fetch(`${API_URL}/files/${id}`, {
+export const updateFile = async (id: number, file: File): Promise<File> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/files/${id}/content`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(file),
+    body: formData,
   });
   if (!response.ok) {
     throw new Error("Failed to update file");
