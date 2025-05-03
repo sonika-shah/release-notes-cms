@@ -1,2 +1,4 @@
 backend/venv/**
-backend/app/**
+backend/app/__pycache__/**
+backend/app/storage/.DS_Store
+backend/app/storage/**
