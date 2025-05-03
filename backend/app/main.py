@@ -159,6 +159,22 @@ async def download_file(file_id: int, db: Session = Depends(get_db)):
         media_type=db_file.file_type
     )
 
+@app.get("/files/{file_id}", response_model=File)
+def get_file(file_id: int, db: Session = Depends(get_db)):
+    """
+    Get file details by ID.
+    
+    - **file_id**: The ID of the file to retrieve
+    - **Returns**: File object with metadata
+    
+    This endpoint returns the file metadata without downloading the actual file content.
+    Use this to get information about a file such as its name, size, type, and creation date.
+    """
+    db_file = crud.get_file(db, file_id=file_id)
+    if not db_file:
+        raise HTTPException(status_code=404, detail="File not found")
+    return db_file
+
 @app.delete("/files/{file_id}")
 def delete_file(file_id: int, db: Session = Depends(get_db)):
     success = crud.delete_file(db, file_id=file_id)
