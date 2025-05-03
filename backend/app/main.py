@@ -5,12 +5,14 @@ from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
-from . import crud, models, schemas
-from .database import engine, get_db
-from .storage_service import file_storage
+from app import crud
+from app.models import Base
+from app.schemas import Bucket, BucketCreate, BucketUpdate, File
+from app.database import engine, get_db
+from app.storage_service import file_storage
 
 # Create database tables
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Release Notes CMS",
@@ -60,26 +62,26 @@ app.openapi = custom_openapi
 def read_root():
     return {"message": "Welcome to Release Notes CMS API"}
 
-@app.get("/buckets/", response_model=List[schemas.Bucket])
+@app.get("/buckets/", response_model=List[Bucket])
 def read_buckets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     buckets = crud.get_buckets(db, skip=skip, limit=limit)
     return buckets
 
-@app.get("/buckets/{bucket_id}", response_model=schemas.Bucket)
+@app.get("/buckets/{bucket_id}", response_model=Bucket)
 def read_bucket(bucket_id: int, db: Session = Depends(get_db)):
     db_bucket = crud.get_bucket_with_files(db, bucket_id=bucket_id)
     if db_bucket is None:
         raise HTTPException(status_code=404, detail="Release bucket not found")
     return db_bucket
 
-@app.post("/buckets/", response_model=schemas.Bucket)
-def create_bucket(bucket: schemas.BucketCreate, db: Session = Depends(get_db)):
+@app.post("/buckets/", response_model=Bucket)
+def create_bucket(bucket: BucketCreate, db: Session = Depends(get_db)):
     return crud.create_bucket(db=db, bucket=bucket)
 
-@app.put("/buckets/{bucket_id}", response_model=schemas.Bucket)
+@app.put("/buckets/{bucket_id}", response_model=Bucket)
 def update_bucket(
     bucket_id: int,
-    bucket: schemas.BucketUpdate,
+    bucket: BucketUpdate,
     db: Session = Depends(get_db)
 ):
     db_bucket = crud.update_bucket(db, bucket_id=bucket_id, bucket=bucket)
@@ -94,7 +96,7 @@ def delete_bucket(bucket_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Release bucket not found")
     return {"message": "Release bucket and associated files deleted successfully"}
 
-@app.post("/buckets/{bucket_id}/files/", response_model=schemas.File)
+@app.post("/buckets/{bucket_id}/files/", response_model=File)
 async def upload_file(
     bucket_id: int,
     file: UploadFile = FastAPIFile(...),
@@ -122,7 +124,7 @@ async def upload_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
-@app.get("/buckets/{bucket_id}/files/", response_model=List[schemas.File])
+@app.get("/buckets/{bucket_id}/files/", response_model=List[File])
 def get_bucket_files(
     bucket_id: int,
     skip: int = 0,
