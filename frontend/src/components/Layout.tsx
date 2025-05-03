@@ -1,4 +1,12 @@
-import { Box, AppBar, Toolbar, Typography, Container } from "@mui/material";
+import { Add } from "@mui/icons-material";
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Button,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 
 interface LayoutProps {
@@ -25,6 +33,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             Collate CMS
           </Typography>
+          <Button
+            color="inherit"
+            component={Link}
+            to="/buckets/new"
+            startIcon={<Add />}
+          >
+            New Bucket
+          </Button>
         </Toolbar>
       </AppBar>
       <Container component="main" sx={{ flex: 1, py: 4 }}>
