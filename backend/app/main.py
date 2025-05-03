@@ -1,17 +1,20 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File as FastAPIFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+import os
 from . import crud, models, schemas
 from .database import engine, get_db
+from .storage_service import file_storage
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Bucket CMS",
-    description="A modern Content Management System for managing buckets",
+    title="Release Notes CMS",
+    description="A modern Content Management System for managing release notes",
     version="1.0.0"
 )
 
@@ -24,9 +27,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Release Notes CMS",
+        version="1.0.0",
+        description="A modern Content Management System for managing release notes",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["schemas"]["UploadFile"] = {
+        "title": "UploadFile",
+        "type": "object",
+        "properties": {
+            "file": {
+                "title": "File",
+                "type": "string",
+                "format": "binary"
+            },
+            "description": {
+                "title": "Description",
+                "type": "string"
+            }
+        }
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Call Bucket CMS API"}
+    return {"message": "Welcome to Release Notes CMS API"}
 
 @app.get("/buckets/", response_model=List[schemas.Bucket])
 def read_buckets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -35,9 +67,9 @@ def read_buckets(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 
 @app.get("/buckets/{bucket_id}", response_model=schemas.Bucket)
 def read_bucket(bucket_id: int, db: Session = Depends(get_db)):
-    db_bucket = crud.get_bucket(db, bucket_id=bucket_id)
+    db_bucket = crud.get_bucket_with_files(db, bucket_id=bucket_id)
     if db_bucket is None:
-        raise HTTPException(status_code=404, detail="Call bucket not found")
+        raise HTTPException(status_code=404, detail="Release bucket not found")
     return db_bucket
 
 @app.post("/buckets/", response_model=schemas.Bucket)
@@ -52,15 +84,71 @@ def update_bucket(
 ):
     db_bucket = crud.update_bucket(db, bucket_id=bucket_id, bucket=bucket)
     if db_bucket is None:
-        raise HTTPException(status_code=404, detail="Bucket not found")
+        raise HTTPException(status_code=404, detail="Release bucket not found")
     return db_bucket
 
 @app.delete("/buckets/{bucket_id}")
 def delete_bucket(bucket_id: int, db: Session = Depends(get_db)):
     success = crud.delete_bucket(db, bucket_id=bucket_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Bucket not found")
-    return {"message": "Bucket deleted successfully"}
+        raise HTTPException(status_code=404, detail="Release bucket not found")
+    return {"message": "Release bucket and associated files deleted successfully"}
+
+@app.post("/buckets/{bucket_id}/files/", response_model=schemas.File)
+async def upload_file(
+    bucket_id: int,
+    file: UploadFile = FastAPIFile(...),
+    description: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    # Verify bucket exists
+    db_bucket = crud.get_bucket(db, bucket_id=bucket_id)
+    if not db_bucket:
+        raise HTTPException(status_code=404, detail="Release bucket not found")
+
+    try:
+        # Read file content
+        contents = await file.read()
+        
+        # Save file and create record
+        db_file = crud.create_file(
+            db=db,
+            file_data=contents,
+            original_name=file.filename,
+            bucket_id=bucket_id,
+            description=description
+        )
+        return db_file
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+
+@app.get("/buckets/{bucket_id}/files/", response_model=List[schemas.File])
+def get_bucket_files(
+    bucket_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    return crud.get_files(db, bucket_id=bucket_id, skip=skip, limit=limit)
+
+@app.get("/files/{file_id}/download")
+async def download_file(file_id: int, db: Session = Depends(get_db)):
+    db_file = crud.get_file(db, file_id=file_id)
+    if not db_file:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(
+        path=db_file.storage_path,
+        filename=db_file.original_name,
+        media_type=db_file.file_type
+    )
+
+@app.delete("/files/{file_id}")
+def delete_file(file_id: int, db: Session = Depends(get_db)):
+    success = crud.delete_file(db, file_id=file_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="File not found")
+    return {"message": "File deleted successfully"}
 
 @app.get("/health")
 async def health_check():
