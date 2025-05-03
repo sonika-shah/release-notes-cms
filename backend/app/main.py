@@ -10,6 +10,7 @@ from app.models import Base
 from app.schemas import Bucket, BucketCreate, BucketUpdate, File
 from app.database import engine, get_db
 from app.storage_service import file_storage
+from sqlalchemy.sql import func
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -52,6 +53,19 @@ def custom_openapi():
                 "type": "string"
             }
         }
+    }
+    openapi_schema["components"]["schemas"]["UpdateFileContent"] = {
+        "title": "UpdateFileContent",
+        "type": "object",
+        "properties": {
+            "file": {
+                "title": "File",
+                "type": "string",
+                "format": "binary",
+                "description": "New file content to replace existing file"
+            }
+        },
+        "required": ["file"]
     }
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -151,6 +165,46 @@ def delete_file(file_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="File not found")
     return {"message": "File deleted successfully"}
+
+@app.put("/files/{file_id}/content")
+async def update_file_content(
+    file_id: int,
+    file: UploadFile = FastAPIFile(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Update the content of an existing file.
+    
+    - **file_id**: The ID of the file to update
+    - **file**: The new file content to replace the existing file
+    - **Returns**: Success message and updated file information
+    
+    This endpoint allows you to replace the content of an existing file while maintaining
+    the same file ID and metadata. The file size and updated timestamp will be automatically
+    updated in the database.
+    """
+    db_file = crud.get_file(db, file_id=file_id)
+    if not db_file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    try:
+        # Read new file content
+        contents = await file.read()
+        
+        # Update file in storage
+        success = file_storage.update_file(db_file.storage_path, contents)
+        if not success:
+            raise HTTPException(status_code=500, detail="Error updating file content")
+        
+        # Update file metadata in database
+        db_file.file_size = len(contents)
+        db_file.updated_at = func.now()
+        db.commit()
+        db.refresh(db_file)
+        
+        return {"message": "File content updated successfully", "file": db_file}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating file: {str(e)}")
 
 @app.get("/health")
 async def health_check():

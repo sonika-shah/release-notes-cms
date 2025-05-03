@@ -55,6 +55,15 @@ class FileStorageService:
         except Exception:
             return None
 
+    def update_file(self, storage_path: str, new_content: bytes) -> bool:
+        """Update file content in storage"""
+        try:
+            with open(storage_path, "wb") as f:
+                f.write(new_content)
+            return True
+        except Exception:
+            return False
+
 # Initialize the storage service
 STORAGE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app", "storage")
 file_storage = FileStorageService(STORAGE_DIR) 
