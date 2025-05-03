@@ -1,34 +1,36 @@
-import { ReactNode } from "react";
-import { AppBar, Toolbar, Typography, Button, Container } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import AddIcon from "@mui/icons-material/Add";
+import { Box, AppBar, Toolbar, Typography, Container } from "@mui/material";
+import { Link } from "react-router-dom";
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            component={Link}
+            to="/"
+            sx={{
+              flexGrow: 1,
+              textDecoration: "none",
+              color: "inherit",
+              "&:hover": {
+                textDecoration: "none",
+              },
+            }}
+          >
             Collate CMS
           </Typography>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/buckets/new"
-            startIcon={<AddIcon />}
-          >
-            New Bucket
-          </Button>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container component="main" sx={{ flex: 1, py: 4 }}>
         {children}
       </Container>
-    </>
+    </Box>
   );
 };
 

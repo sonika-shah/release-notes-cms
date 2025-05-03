@@ -10,22 +10,25 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { slugify } from "../utils/slugify";
-import { File } from "../types/releaseNote";
-import { createFile } from "../services/api";
+import { FileCreate, Files } from "../types/releaseNote";
+import { createFile, updateFile } from "../services/api";
+import { MarkdownUploader } from "../components/MarkdownUploader";
 
 const FileForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<File>({
+  const [fileContent, setFileContent] = useState<string>("");
+  const [formData, setFormData] = useState<Files>({
     id: 0,
     name: "",
     slug: "",
-    directory: "",
-    content: "",
+    bucketId: parseInt(id || "0"),
     is_published: false,
     created_at: new Date().toISOString(),
     updated_at: null,
+    file: new File([], ""),
   });
 
   useEffect(() => {
@@ -63,13 +66,23 @@ const FileForm = () => {
     });
   };
 
+  const handleFileSelect = async (fileData: FileCreate) => {
+    setFormData((prev) => ({
+      ...prev,
+      file: fileData.file,
+    }));
+    setFileContent(await fileData.file.text());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (id) {
-        // await updateFile(parseInt(id), formData);
+        await updateFile(parseInt(id), {
+          ...formData,
+        });
       } else {
-        await createFile(formData);
+        await createFile(parseInt(id ?? "0"), formData);
       }
       navigate("/");
     } catch (error) {
@@ -104,36 +117,20 @@ const FileForm = () => {
         margin="normal"
         required
       />
-      <TextField
-        fullWidth
-        label="Slug"
-        name="slug"
-        value={formData.slug}
-        onChange={handleChange}
-        margin="normal"
-        required
-        disabled
-      />
+
       <TextField
         fullWidth
         label="Directory"
         name="directory"
-        value={formData.directory}
+        value={formData.bucketId}
         onChange={handleChange}
         margin="normal"
         required
         placeholder="e.g., /docs/release-notes"
       />
-      <TextField
-        fullWidth
-        label="Content"
-        name="content"
-        value={formData.content}
-        onChange={handleChange}
-        margin="normal"
-        multiline
-        rows={4}
-        required
+      <MarkdownUploader
+        onFileSelect={handleFileSelect}
+        initialContent={fileContent}
       />
       <FormControlLabel
         control={

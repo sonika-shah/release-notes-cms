@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate, Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -19,13 +19,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Add } from "@mui/icons-material";
 import { Bucket } from "../types/releaseNote";
 import { getCallBuckets, deleteCallBucket } from "../services/api";
-import CreateFileModal from "../components/CreateFileModal";
 
 const BucketsList = () => {
+  const navigate = useNavigate();
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedBucket, setSelectedBucket] = useState<Bucket | null>(null);
 
   useEffect(() => {
     const buckets = localStorage.getItem("buckets");
@@ -64,6 +63,10 @@ const BucketsList = () => {
         console.error(`Error deleting:`, error);
       }
     }
+  };
+
+  const handleCreateFile = (bucket: Bucket) => {
+    navigate(`/buckets/${bucket.id}/files/new`);
   };
 
   if (isLoading) {
@@ -107,7 +110,14 @@ const BucketsList = () => {
           <TableBody>
             {buckets.map((bucket) => (
               <TableRow key={bucket.id}>
-                <TableCell>{bucket.title}</TableCell>
+                <TableCell>
+                  <Link
+                    to={`/buckets/${bucket.id}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {bucket.title}
+                  </Link>
+                </TableCell>
                 <TableCell>
                   {format(new Date(bucket.created_at), "MMM dd, yyyy")}
                 </TableCell>
@@ -115,14 +125,14 @@ const BucketsList = () => {
                 <TableCell>
                   <IconButton
                     component={RouterLink}
-                    to={`/call-buckets/${bucket.id}/edit`}
+                    to={`/buckets/${bucket.id}/edit`}
                     color="primary"
                   >
                     <EditIcon />
                   </IconButton>
                   <IconButton
                     color="primary"
-                    onClick={() => setSelectedBucket(bucket)}
+                    onClick={() => handleCreateFile(bucket)}
                   >
                     <Add />
                   </IconButton>
@@ -138,15 +148,6 @@ const BucketsList = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {selectedBucket && (
-        <CreateFileModal
-          open
-          onClose={() => setSelectedBucket(null)}
-          onSuccess={fetchData}
-          defaultDirectory={selectedBucket.slug}
-        />
-      )}
     </>
   );
 };

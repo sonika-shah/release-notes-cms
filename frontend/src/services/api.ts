@@ -82,11 +82,14 @@ export const getFile = async (id: number): Promise<File> => {
   return response.json();
 };
 
-export const createFile = async (file: FileCreate): Promise<File> => {
-  const response = await fetch(`${API_URL}/files/`, {
+export const createFile = async (
+  bucketId: number,
+  file: FileCreate
+): Promise<File> => {
+  const response = await fetch(`${API_URL}/buckets/${bucketId}/files/`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "multipart/form-data",
     },
     body: JSON.stringify(file),
   });
@@ -119,5 +122,33 @@ export const deleteFile = async (id: number): Promise<void> => {
   });
   if (!response.ok) {
     throw new Error("Failed to delete file");
+  }
+};
+
+export const fetchFileContent = async (fileId?: number) => {
+  if (!fileId) {
+    throw new Error("File ID is required");
+  }
+  try {
+    const response = await fetch(`/api/files/${fileId}/download`);
+    if (!response.ok) throw new Error("Failed to fetch file content");
+
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      const data = await response.json();
+      return {
+        content: data.content,
+        fileType: data.file_type || "text/plain",
+      };
+    } else {
+      const content = await response.text();
+      return {
+        content,
+        fileType: "text/plain",
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching file content:", error);
+    throw error;
   }
 };

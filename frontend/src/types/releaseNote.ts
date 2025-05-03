@@ -1,36 +1,36 @@
 export interface Bucket {
   id: number;
   title: string;
-  slug: string;
   created_at: string;
-  updated_at: string | null;
+  updated_at: string;
 }
 
 export interface BucketCreate {
   title: string;
-  slug: string;
+  release_date: string;
+  is_published: boolean;
 }
 
 export interface BucketUpdate {
   title?: string;
-  slug?: string;
+  release_date?: string;
+  is_published?: boolean;
 }
 
-export interface File {
+export interface Files {
   id: number;
-  name: string;
-  slug: string;
-  directory: string;
-  content: string;
-  is_published: boolean;
+  original_name: string;
+  bucketId: number;
   created_at: string;
   updated_at: string | null;
+  description: string;
+  file_size?: number;
+  file_type?: string;
+  filePath?: string;
 }
 
 export interface FileCreate {
-  name: string;
-  slug: string;
-  directory: string;
-  content: string;
-  is_published: boolean;
+  bucketId: number;
+  description: string;
+  file: File;
 }
